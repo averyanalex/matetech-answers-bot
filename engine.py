@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import requests
-import toml
 import micropickle
 from config import get_cpm_token
 
@@ -9,7 +8,6 @@ def get_answers(code: str):
     if len(code) > 10:
         code_start = code.find('=')
         code = code[code_start + 1:]
-    config = toml.load('config.toml')
     response = requests.get(f"https://api.matetech.ru/api/public/companies/3/test_attempts/{code}/result",
                             headers={"Authorization": get_cpm_token()})
     resp = response.json()
