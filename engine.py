@@ -10,6 +10,7 @@ def get_answers(code: str):
         code = code[code_start + 1:]
     response = requests.get(f"https://api.matetech.ru/api/public/companies/3/test_attempts/{code}/result",
                             headers={"Authorization": get_cpm_token()})
+    print(get_cpm_token())
     resp = response.json()
     if response.status_code == 404:
         return {'message': 'Перепроверь айди', 'channel': False}
