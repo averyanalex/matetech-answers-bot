@@ -17,7 +17,7 @@ def get_answers(code: str):
         f"https://api.matetech.ru/api/public/companies/3/courses/{resp['data']['test_lesson']['course_id']}?with"
         f"=paymentPackagesBySort;advantagesBySort;subcategories_with_categories;availablePackagesBySort;locals"
         f"&append_avg_rating=true&append_approved_reviews_has_points_count=true&withCount=students,lessons",
-        headers={"Authorization": config['token']})
+        headers={"Authorization": get_cpm_token()})
     result = ""
     resp_c = response_course.json()
     course = resp_c['data']['name']
