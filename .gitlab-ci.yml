@@ -1,5 +1,4 @@
 build:
-  name: Build
   image:
     name: gcr.io/kaniko-project/executor:debug
     entrypoint: [""]
