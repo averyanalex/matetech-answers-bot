@@ -4,9 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-requests = "*"
-python-telegram-bot = {extras = ["ujson"], version = "*"}
-toml = "*"
+requests = "2.27.1"
+python-telegram-bot = {extras = ["ujson"], version = "13.11"}
+toml = "0.10.2"
 
 [dev-packages]
 
