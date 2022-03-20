@@ -8,7 +8,7 @@ build:
   - mkdir -p /kaniko/.docker
   - echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(echo -n ${CI_REGISTRY_USER}:${CI_REGISTRY_PASSWORD}
     | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
-  - /kaniko/executor --insecure-registry $CI_REGISTRY --cache=true --cache-repo=$CI_REGISTRY_IMAGE/cache --use-new-run
+  - /kaniko/executor --cache=true --cache-repo=$CI_REGISTRY_IMAGE/cache --use-new-run
     --context . --dockerfile ./Dockerfile --destination $CI_REGISTRY_IMAGE --force
 include:
 - template: Security/Secret-Detection.gitlab-ci.yml
