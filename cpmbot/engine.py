@@ -51,12 +51,12 @@ def get_answers(code: str):
                     pr += str(a_id + 1)
         result += pr + "\n"
 
-    # sent_tests = micropickle.load_obj("tests")
+    sent_tests = micropickle.load_obj("tests")
     sent_tests = []
     try:
         sent_tests.index(response["data"]["test_lesson"]["id"])
     except ValueError:
         sent_tests.append(response["data"]["test_lesson"]["id"])
-        # micropickle.save_obj(sent_tests, "tests")
+        micropickle.save_obj(sent_tests, "tests")
         return {"message": result, "channel": True, "cl": cl}
     return {"message": result, "channel": False}
