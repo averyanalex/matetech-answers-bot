@@ -19,19 +19,19 @@ async def messages_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         if answers["channel"]:
             if answers["cl"] == 8:
-                context.bot.send_message(
+                await context.bot.send_message(
                     chat_id=-1001403887087, text=answers["message"]
                 )
             if answers["cl"] == 9:
-                context.bot.send_message(
+                await context.bot.send_message(
                     chat_id=-1001599892206, text=answers["message"]
                 )
             if answers["cl"] == 10:
-                context.bot.send_message(
+                await context.bot.send_message(
                     chat_id=-1001783255653, text=answers["message"]
                 )
             if answers["cl"] == 11:
-                context.bot.send_message(
+                await context.bot.send_message(
                     chat_id=-1001693528441, text=answers["message"]
                 )
     except json.decoder.JSONDecodeError:
