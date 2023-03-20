@@ -52,7 +52,6 @@ def get_answers(code: str):
         result += pr + "\n"
 
     sent_tests = micropickle.load_obj("tests")
-    sent_tests = []
     try:
         sent_tests.index(response["data"]["test_lesson"]["id"])
     except ValueError:
