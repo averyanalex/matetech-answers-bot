@@ -2,14 +2,15 @@
 name = "cpmbot"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["Alexander Averyanov <alex@averyan.ru>"]
+
+[tool.poetry.scripts]
+cpmbot = 'cpmbot:main'
 
 [tool.poetry.dependencies]
 python = "^3.9"
 python-telegram-bot = "^20.0"
 requests = "^2.28.2"
-
-[tool.poetry.dev-dependencies]
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"

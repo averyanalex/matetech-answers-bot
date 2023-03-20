@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import requests
-import micropickle
-from config import get_cpm_token
+from . import micropickle
+from .config import get_cpm_token
 
 
 def get_answers(code: str):
@@ -17,9 +17,7 @@ def get_answers(code: str):
 
     # Course info
     response_course = requests.get(
-        f"https://api.matetech.ru/api/public/companies/3/courses/{response['data']['test_lesson']['course_id']}?with"
-        f"=paymentPackagesBySort;advantagesBySort;subcategories_with_categories;availablePackagesBySort;locals"
-        f"&append_avg_rating=true&append_approved_reviews_has_points_count=true&withCount=students,lessons",
+        f"https://api.matetech.ru/api/public/companies/3/courses/{response['data']['test_lesson']['course_id']}?with=subcategories;coursesToOpen:name;availablePackagesBySort&withCount=lessons",
         headers={"Authorization": get_cpm_token()},
     )
     response_course = response_course.json()
