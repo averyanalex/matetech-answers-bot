@@ -1,8 +1,8 @@
 mod db;
-mod engine;
 
 use teloxide::{prelude::*, utils::command::BotCommands};
 use sqlx::PgPool;
+use matetech_engine;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -64,7 +64,7 @@ enum Command {
     #[command(description = "auth. /auth <login> <password>", parse_with = "split")]
     Auth { login: String, password: String },
     #[command(description = "solve. /solve <test_id>")]
-    Solve { test_id: String },
+    Solve { test_id: u32 },
     Help,
 }
 
@@ -79,7 +79,7 @@ async fn answer(db: PgPool, bot: Bot, msg: Message, cmd: Command) -> anyhow::Res
             bot.send_message(msg.chat.id, format!("Pong: {text}")).await?;
         }
         Auth { login, password } => {
-            let token = engine::get_token(login, password).await;
+            let token = matetech_engine::login(login, password).await?;
             db::set_token(&db, msg.chat.id.0, &token).await?;
             bot.send_message(msg.chat.id, format!("Your token: {token}")).await?;
         }
@@ -87,8 +87,8 @@ async fn answer(db: PgPool, bot: Bot, msg: Message, cmd: Command) -> anyhow::Res
             let token = db::get_token(&db, msg.chat.id.0).await?;
             match token {
                 Some(token) => {
-                    let answers = engine::get_answers(token, test_id).await;
-                    bot.send_message(msg.chat.id, format!("Answers: {answers}")).await?;
+                    let answers = matetech_engine::solve(test_id, token).await?;
+                    bot.send_message(msg.chat.id, answers).await?;
                 }
                 None => {
                     bot.send_message(msg.chat.id, "Error, no token.").await?;

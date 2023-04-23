@@ -1,0 +1,3 @@
+[submodule "matetech-engine"]
+	path = matetech-engine
+	url = git@github.com:averyanalex/matetech-engine.git
