@@ -8,7 +8,9 @@ pub async fn set_token(
     sqlx::query!(
         r#"
 INSERT INTO tokens ( chat_id, token )
-VALUES ( $1, $2 )
+    VALUES ( $1, $2 )
+    ON CONFLICT ( chat_id ) DO UPDATE
+        SET token = $2
         "#,
         chat_id,
         token,
@@ -26,7 +28,9 @@ pub async fn get_token(
         r#"
 SELECT token
 FROM tokens
-        "#
+WHERE chat_id = $1
+        "#,
+        chat_id
     )
     .fetch_optional(db)
     .await?;
