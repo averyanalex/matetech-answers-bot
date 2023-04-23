@@ -1,0 +1,4 @@
+CREATE TABLE IF NOT EXISTS tokens (
+    chat_id BIGSERIAL PRIMARY KEY,
+    token TEXT NOT NULL
+);
