@@ -1,8 +1,8 @@
 mod db;
 
-use teloxide::{prelude::*, utils::command::BotCommands};
-use sqlx::PgPool;
 use matetech_engine;
+use sqlx::PgPool;
+use teloxide::{prelude::*, utils::command::BotCommands};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -29,26 +29,23 @@ async fn main() -> anyhow::Result<()> {
     //         .branch(dptree::endpoint(invalid_command)),
     // );
 
-    Dispatcher::builder(
-        bot,
-        handler,
-    )
-    /* Update::filter_message()
-                 *     .enter_dialogue::<Message, InMemStorage<State>,
-                 * State>()     .branch(dptree::case!
-                 * [State::Start].endpoint(start))
-                 *     .branch(dptree::case![State::ReceiveFullName].
-                 * endpoint(receive_full_name))
-                 *     .branch(dptree::case![State::ReceiveAge { full_name
-                 * }].endpoint(receive_age))     .branch(
-                 *         dptree::case![State::ReceiveLocation { full_name,
-                 * age }].endpoint(receive_location),     ), */
-    // .dependencies(dptree::deps![InMemStorage::<State>::new()])
-    .dependencies(dptree::deps![db])
-    .enable_ctrlc_handler()
-    .build()
-    .dispatch()
-    .await;
+    Dispatcher::builder(bot, handler)
+        // Update::filter_message()
+        //     .enter_dialogue::<Message, InMemStorage<State>,
+        // State>()     .branch(dptree::case!
+        // [State::Start].endpoint(start))
+        //     .branch(dptree::case![State::ReceiveFullName].
+        // endpoint(receive_full_name))
+        //     .branch(dptree::case![State::ReceiveAge { full_name
+        // }].endpoint(receive_age))     .branch(
+        //         dptree::case![State::ReceiveLocation { full_name,
+        // age }].endpoint(receive_location),     ),
+        // .dependencies(dptree::deps![InMemStorage::<State>::new()])
+        .dependencies(dptree::deps![db])
+        .enable_ctrlc_handler()
+        .build()
+        .dispatch()
+        .await;
 
     Ok(())
 }
@@ -61,14 +58,27 @@ async fn main() -> anyhow::Result<()> {
 enum Command {
     #[command(description = "ping the text back. /ping <text>")]
     Ping(String),
-    #[command(description = "auth. /auth <login> <password>", parse_with = "split")]
-    Auth { login: String, password: String },
+    #[command(
+        description = "auth. /auth <login> <password>",
+        parse_with = "split"
+    )]
+    Auth {
+        login: String,
+        password: String,
+    },
     #[command(description = "solve. /solve <test_id>")]
-    Solve { test_id: u32 },
+    Solve {
+        test_id: u32,
+    },
     Help,
 }
 
-async fn answer(db: PgPool, bot: Bot, msg: Message, cmd: Command) -> anyhow::Result<()> {
+async fn answer(
+    db: PgPool,
+    bot: Bot,
+    msg: Message,
+    cmd: Command,
+) -> anyhow::Result<()> {
     use Command::*;
     match cmd {
         Help => {
@@ -81,13 +91,15 @@ async fn answer(db: PgPool, bot: Bot, msg: Message, cmd: Command) -> anyhow::Res
         Auth { login, password } => {
             let token = matetech_engine::login(login, password).await?;
             db::set_token(&db, msg.chat.id.0, &token).await?;
-            bot.send_message(msg.chat.id, format!("Your token: {token}")).await?;
+            bot.send_message(msg.chat.id, format!("Your token: {token}"))
+                .await?;
         }
         Solve { test_id } => {
             let token = db::get_token(&db, msg.chat.id.0).await?;
             match token {
                 Some(token) => {
-                    let answers = matetech_engine::solve(test_id, token).await?;
+                    let answers =
+                        matetech_engine::solve(test_id, token).await?;
                     bot.send_message(msg.chat.id, answers).await?;
                 }
                 None => {
