@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.70"
-sqlx = { version = "0.6.3", features = ["postgres", "runtime-tokio-native-tls", "migrate"] }
+sqlx = { version = "0.6.3", features = ["postgres", "runtime-tokio-native-tls", "migrate", "offline"] }
 teloxide = { version = "0.12.2", features = ["macros"] }
 tokio = { version = "1.27.0", features = ["rt-multi-thread", "macros"] }
 tracing = "0.1.37"

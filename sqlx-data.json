@@ -1,0 +1,36 @@
+{
+  "db": "PostgreSQL",
+  "2d59192953f35422fc5c626b447ead43dc5d5fc63dfd43d2709c94ffb31238f2": {
+    "describe": {
+      "columns": [
+        {
+          "name": "token",
+          "ordinal": 0,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      }
+    },
+    "query": "\nSELECT token\nFROM tokens\nWHERE chat_id = $1\n        "
+  },
+  "7929e7696bf084cc2a6446f98dba38a6652147c7496519af9fe17b26a9c07bb6": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Text"
+        ]
+      }
+    },
+    "query": "\nINSERT INTO tokens ( chat_id, token )\n    VALUES ( $1, $2 )\n    ON CONFLICT ( chat_id ) DO UPDATE\n        SET token = $2\n        "
+  }
+}
