@@ -5,11 +5,16 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, rust-overlay, flake-utils, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        overlays = [ (import rust-overlay) ];
-        pkgs = import nixpkgs { inherit system overlays; };
+  outputs = {
+    nixpkgs,
+    rust-overlay,
+    flake-utils,
+    ...
+  }:
+    flake-utils.lib.eachDefaultSystem (
+      system: let
+        overlays = [(import rust-overlay)];
+        pkgs = import nixpkgs {inherit system overlays;};
         rustVersion = pkgs.rust-bin.nightly.latest.default;
 
         pgstart = pkgs.writeShellScriptBin "pgstart" ''
@@ -30,27 +35,52 @@
         pgstop = pkgs.writeShellScriptBin "pgstop" ''
           pg_ctl -D $PGDATA stop | true
         '';
-      in
-      {
-        devShells.default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            sqlx-cli
-            postgresql
-            openssl
-            pkg-config
-          ] ++ [
-            pgstart
-            pgstop
-            rustVersion
-          ];
+      in {
+        devShells = {
+          default = pkgs.mkShell {
+            buildInputs = with pkgs;
+              [
+                sqlx-cli
+                postgresql
+                openssl
+                pkg-config
+              ]
+              ++ [
+                pgstart
+                pgstop
+                rustVersion
+              ];
 
-          shellHook = ''
-            export PGDATA=$PWD/postgres/data
-            export PGHOST=$PWD/postgres
-            export LOG_PATH=$PWD/postgres/LOG
-            export PGDATABASE=cpmbot
-            export DATABASE_URL=postgresql:///cpmbot?host=$PWD/postgres;
-          '';
+            shellHook = ''
+              export PGDATA=$PWD/postgres/data
+              export PGHOST=$PWD/postgres
+              export LOG_PATH=$PWD/postgres/LOG
+              export PGDATABASE=cpmbot
+              export DATABASE_URL=postgresql:///cpmbot?host=$PWD/postgres;
+            '';
+          };
+          norust = pkgs.mkShell {
+            buildInputs = with pkgs;
+              [
+                sqlx-cli
+                postgresql
+                openssl
+                pkg-config
+              ]
+              ++ [
+                pgstart
+                pgstop
+                # rustVersion
+              ];
+
+            shellHook = ''
+              export PGDATA=$PWD/postgres/data
+              export PGHOST=$PWD/postgres
+              export LOG_PATH=$PWD/postgres/LOG
+              export PGDATABASE=cpmbot
+              export DATABASE_URL=postgresql:///cpmbot?host=$PWD/postgres;
+            '';
+          };
         };
       }
     );

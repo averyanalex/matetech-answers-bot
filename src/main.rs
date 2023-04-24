@@ -1,6 +1,6 @@
 mod db;
+mod engine;
 
-use matetech_engine;
 use sqlx::PgPool;
 use teloxide::{prelude::*, utils::command::BotCommands};
 
@@ -12,35 +12,14 @@ async fn main() -> anyhow::Result<()> {
     let db = sqlx::PgPool::connect(&std::env::var("DATABASE_URL")?).await?;
     sqlx::migrate!().run(&db).await?;
 
-    tracing::info!("Starting command bot...");
+    tracing::info!("Starting bot...");
     let bot = Bot::from_env();
-
-    // Command::repl(bot, answer).await;
 
     let handler = Update::filter_message()
         .branch(dptree::entry().filter_command::<Command>().endpoint(answer))
         .branch(dptree::endpoint(invalid_command));
-    // .enter_dialogue::<Message, ErasedStorage<State>, State>()
-    // .branch(dptree::case![State::Start].endpoint(start))
-    // .branch(
-    //     dptree::case![State::GotNumber(n)]
-    //         .branch(dptree::entry().filter_command::<Command>().
-    // endpoint(got_number))
-    //         .branch(dptree::endpoint(invalid_command)),
-    // );
 
     Dispatcher::builder(bot, handler)
-        // Update::filter_message()
-        //     .enter_dialogue::<Message, InMemStorage<State>,
-        // State>()     .branch(dptree::case!
-        // [State::Start].endpoint(start))
-        //     .branch(dptree::case![State::ReceiveFullName].
-        // endpoint(receive_full_name))
-        //     .branch(dptree::case![State::ReceiveAge { full_name
-        // }].endpoint(receive_age))     .branch(
-        //         dptree::case![State::ReceiveLocation { full_name,
-        // age }].endpoint(receive_location),     ),
-        // .dependencies(dptree::deps![InMemStorage::<State>::new()])
         .dependencies(dptree::deps![db])
         .enable_ctrlc_handler()
         .build()
@@ -79,33 +58,41 @@ async fn answer(
     msg: Message,
     cmd: Command,
 ) -> anyhow::Result<()> {
-    use Command::*;
     match cmd {
-        Help => {
-            bot.send_message(msg.chat.id, Command::descriptions().to_string())
-                .await?;
+        Command::Ping(text) => {
+            bot.send_message(
+                msg.chat.id,
+                if text.is_empty() {
+                    "Pong!".to_owned()
+                } else {
+                    format!("Pong: {text}")
+                },
+            )
+            .await?;
         }
-        Ping(text) => {
-            bot.send_message(msg.chat.id, format!("Pong: {text}")).await?;
-        }
-        Auth { login, password } => {
+        Command::Auth { login, password } => {
             let token = matetech_engine::login(login, password).await?;
             db::set_token(&db, msg.chat.id.0, &token).await?;
             bot.send_message(msg.chat.id, format!("Your token: {token}"))
                 .await?;
+            bot.send_message(msg.chat.id, format!("Your token: {token}"))
+                .await?;
         }
-        Solve { test_id } => {
+        Command::Solve { test_id } => {
             let token = db::get_token(&db, msg.chat.id.0).await?;
             match token {
                 Some(token) => {
-                    let answers =
-                        matetech_engine::solve(test_id, token).await?;
+                    let answers = matetech_engine::solve(test_id, token).await?;
                     bot.send_message(msg.chat.id, answers).await?;
                 }
                 None => {
                     bot.send_message(msg.chat.id, "Error, no token.").await?;
                 }
             }
+        }
+        Command::Help => {
+            bot.send_message(msg.chat.id, Command::descriptions().to_string())
+                .await?;
         }
     }
 
