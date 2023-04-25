@@ -1,8 +1,11 @@
 mod db;
 mod engine;
 
+use once_cell::sync::Lazy;
+use regex::Regex;
 use sqlx::PgPool;
-use teloxide::{prelude::*, utils::command::BotCommands};
+static URL_REGEX: Lazy<Regex> =
+    Lazy::new(|| Regex::new("attempt_id=([0-9]+)").unwrap());
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -45,11 +48,27 @@ enum Command {
         login: String,
         password: String,
     },
-    #[command(description = "solve. /solve <test_id>")]
+    #[command(description = "solve. /solve <test_id>", parse_with = parse_solve)]
     Solve {
         test_id: u32,
     },
     Help,
+
+fn parse_solve(input: String) -> Result<(u32,), ParseError> {
+    if let Ok(num) = input.parse::<u32>() {
+        return Ok((num,));
+    }
+
+    match URL_REGEX
+        .captures(&input)
+        .and_then(|c| c.get(1))
+        .and_then(|c| c.as_str().parse::<u32>().ok())
+    {
+        Some(num) => Ok((num,)),
+        None => Err(ParseError::Custom(
+            format!("Couldn't parse /solve {input}").into(),
+        )),
+    }
 }
 
 async fn answer(
@@ -73,8 +92,6 @@ async fn answer(
         Command::Auth { login, password } => {
             let token = matetech_engine::login(login, password).await?;
             db::set_token(&db, msg.chat.id.0, &token).await?;
-            bot.send_message(msg.chat.id, format!("Your token: {token}"))
-                .await?;
             bot.send_message(msg.chat.id, format!("Your token: {token}"))
                 .await?;
         }
