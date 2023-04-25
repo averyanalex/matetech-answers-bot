@@ -82,7 +82,8 @@ async fn answer(
             let token = db::get_token(&db, msg.chat.id.0).await?;
             match token {
                 Some(token) => {
-                    let answers = matetech_engine::solve(test_id, token).await?;
+                    let solver = matetech_engine::Solver::new(token, test_id)?;
+                    let answers = solver.solve().await?;
                     bot.send_message(msg.chat.id, answers).await?;
                 }
                 None => {
