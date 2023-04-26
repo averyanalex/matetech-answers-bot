@@ -6,15 +6,12 @@ use once_cell::sync::Lazy;
 use regex::Regex;
 use sqlx::PgPool;
 use teloxide::{
-    dispatching::{HandlerExt, UpdateFilterExt},
-    dptree,
-    prelude::Dispatcher,
-    requests::Requester,
-    types::{Message, Update},
-    utils::command::{BotCommands, ParseError},
-    Bot,
+    adaptors::{throttle::Limits, Throttle}, macros::BotCommands, prelude::*,
+    utils::command::ParseError,
 };
 use tracing::instrument;
+
+type Bot = Throttle<teloxide::Bot>;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -25,7 +22,8 @@ async fn main() -> anyhow::Result<()> {
     sqlx::migrate!().run(&db).await?;
 
     tracing::info!("Starting bot...");
-    let bot = Bot::from_env();
+    let bot = teloxide::Bot::from_env()
+        .throttle(Limits { messages_per_min_chat: 5, ..Default::default() });
 
     let handler = Update::filter_message()
         .branch(dptree::entry().filter_command::<Command>().endpoint(answer))
@@ -66,7 +64,7 @@ fn parse_solve(input: String) -> Result<(u32,), ParseError> {
     if let Ok(num) = input.parse::<u32>() {
         return Ok((num,));
     }
-    
+
     match URL_REGEX
         .captures(&input)
         .and_then(|c| c.get(1))
@@ -101,7 +99,7 @@ async fn answer(
                     MatetechError::InvalidCredentials(_) => {
                         bot.send_message(
                             msg.chat.id,
-                            format!("Неверный логин или пароль."),
+                            "Неверный логин или пароль.",
                         )
                         .await?;
                     }
@@ -146,11 +144,9 @@ async fn answer(
                         bot.edit_message_text(
                             msg.chat.id,
                             answers_msg.id,
-                            format!(
-                                "Доступ к тесту невозможен. Убедитесь, что вы \
-                                 вошли в тот же аккаунт, с которого и \
-                                 запустили тест."
-                            ),
+                            "Доступ к тесту невозможен. Убедитесь, что вы \
+                             вошли в тот же аккаунт, с которого и запустили \
+                             тест.",
                         )
                         .await?;
                     }
@@ -158,28 +154,38 @@ async fn answer(
                         bot.edit_message_text(
                             msg.chat.id,
                             answers_msg.id,
-                            format!(
-                                "Тест не найден, проверьте корректность \
-                                 ссылки."
-                            ),
+                            "Тест не найден, проверьте корректность ссылки.",
                         )
                         .await?;
                     }
                     _ => {
-                        bot.edit_message_text(msg.chat.id, answers_msg.id, format!("Произошла неизвестная ошибка. Обратитесь о случившемся сюда (не забудьте указать Telegram): https://forms.yandex.ru/u/61c3234128fb394a19c41d08/")).await?;
+                        bot.edit_message_text(msg.chat.id, answers_msg.id, "Произошла неизвестная ошибка. Обратитесь о случившемся сюда (не забудьте указать Telegram): https://forms.yandex.ru/u/61c3234128fb394a19c41d08/").await?;
                         return Err(err.into());
                     }
                 },
             }
         }
         Command::Help => {
-            bot.send_message(msg.chat.id, format!("{}\n\nИнструкция по решению тестов.\n1. Авторизуйте бота в аккаунт дисткурсов: /login <почта> <пароль>. Данные для входа будут сохранены, в целях безопасности не рекомендуем использовать этот же пароль на других сайтах.\n2. Начните любой тест и скопируйте URL-адрес в адресной строке браузера.\n3. Отправьте ссылку на тест боту.\n4. Подождите, пока бот выполнит тест.\n5. Бот автоматически занесёт ответы в тест.\n6. Убедитесь в правильности ответов и завершите тест.\n\nВ случае возникновения ошибок обращайтесь сюда (с указанием вашего Telegram): https://forms.yandex.ru/u/61c3234128fb394a19c41d08/", "Предупреждение: бот находится в стадии тестирования. Будьте готовы решить тест самостоятельно в случае проблем.")
-        ).await?;
+            bot.send_message(msg.chat.id, HELP_TEXT).await?;
         }
     }
 
     Ok(())
 }
+
+const HELP_TEXT: &str = "\
+Предупреждение: бот находится в стадии тестирования. \
+Будьте готовы решить тест самостоятельно в случае проблем.\n\n\
+Инструкция по решению тестов.\n\
+1. Авторизуйте бота в аккаунт дисткурсов: /login <почта> <пароль>. \
+Данные для входа будут сохранены, в целях безопасности не рекомендуем использовать этот же пароль на других сайтах.\n\
+2. Начните любой тест и скопируйте URL-адрес в адресной строке браузера.\n\
+3. Отправьте ссылку на тест боту.\n\
+4. Подождите, пока бот выполнит тест.\n\
+5. Бот автоматически занесёт ответы в тест.\n\
+6. Убедитесь в правильности ответов и завершите тест.\n\n\
+В случае возникновения ошибок обращайтесь сюда (с указанием вашего Telegram): \
+https://forms.yandex.ru/u/61c3234128fb394a19c41d08/";
 
 async fn invalid_command(
     db: PgPool,

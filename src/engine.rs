@@ -2,8 +2,8 @@ use matetech_engine::MatetechError;
 use tokio::time::{sleep, Duration};
 
 pub async fn login(
-    login: String,
-    password: String,
+    login: &String,
+    password: &String,
 ) -> Result<String, MatetechError> {
     sleep(Duration::from_secs(2)).await;
     Ok(format!("token for {login} {password}"))
