@@ -20,6 +20,26 @@ INSERT INTO tokens ( chat_id, token )
     Ok(())
 }
 
+pub async fn save_answer(
+    db: &PgPool,
+    question_id: i64,
+    answer: &String,
+) -> anyhow::Result<()> {
+    sqlx::query!(
+        r#"
+INSERT INTO answers ( question_id, answer )
+    VALUES ( $1, $2 )
+    ON CONFLICT ( question_id ) DO UPDATE
+        SET answer = $2
+        "#,
+        question_id,
+        answer,
+    )
+    .execute(db)
+    .await?;
+    Ok(())
+}
+
 pub async fn get_token(
     db: &PgPool,
     chat_id: i64,

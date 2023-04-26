@@ -32,5 +32,18 @@
       }
     },
     "query": "\nINSERT INTO tokens ( chat_id, token )\n    VALUES ( $1, $2 )\n    ON CONFLICT ( chat_id ) DO UPDATE\n        SET token = $2\n        "
+  },
+  "ef78bea5f3f63dc2d74b646ac4f4b469ce461cf22e8efeded5e7218320b5c28b": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Text"
+        ]
+      }
+    },
+    "query": "\nINSERT INTO answers ( question_id, answer )\n    VALUES ( $1, $2 )\n    ON CONFLICT ( question_id ) DO UPDATE\n        SET answer = $2\n        "
   }
 }
