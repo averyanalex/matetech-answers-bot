@@ -16,9 +16,6 @@ use teloxide::{
 };
 use tracing::instrument;
 
-static URL_REGEX: Lazy<Regex> =
-    Lazy::new(|| Regex::new("attempt_id=([0-9]+)").unwrap());
-
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt::init();
@@ -63,10 +60,13 @@ enum Command {
 }
 
 fn parse_solve(input: String) -> Result<(u32,), ParseError> {
+    static URL_REGEX: Lazy<Regex> =
+        Lazy::new(|| Regex::new("attempt_id=([0-9]+)").unwrap());
+
     if let Ok(num) = input.parse::<u32>() {
         return Ok((num,));
     }
-
+    
     match URL_REGEX
         .captures(&input)
         .and_then(|c| c.get(1))
