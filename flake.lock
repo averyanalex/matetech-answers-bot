@@ -54,11 +54,11 @@
     "matetech-engine": {
       "flake": false,
       "locked": {
-        "lastModified": 1682625781,
-        "narHash": "sha256-X1Sk0XfLhKvLGel3wmaX5lg7tXPO4JSgCjAvejLyOKY=",
+        "lastModified": 1682627201,
+        "narHash": "sha256-abL1LowQlFIpb9qpgYXWUYAPNwO60QhWY521A8+eFdg=",
         "ref": "refs/heads/main",
-        "rev": "9141f4e5b4330113cfe10b7cdfa9201899083af8",
-        "revCount": 12,
+        "rev": "d3fdb2455c0f3ce5c3199768c215ea0e3540b64c",
+        "revCount": 14,
         "type": "git",
         "url": "ssh://git@github.com/averyanalex/matetech-engine.git"
       },
