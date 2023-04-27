@@ -36,6 +36,37 @@
         "type": "github"
       }
     },
+    "import-cargo": {
+      "locked": {
+        "lastModified": 1594305518,
+        "narHash": "sha256-frtArgN42rSaEcEOYWg8sVPMUK+Zgch3c+wejcpX3DY=",
+        "owner": "edolstra",
+        "repo": "import-cargo",
+        "rev": "25d40be4a73d40a2572e0cc233b83253554f06c5",
+        "type": "github"
+      },
+      "original": {
+        "owner": "edolstra",
+        "repo": "import-cargo",
+        "type": "github"
+      }
+    },
+    "matetech-engine": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1682521580,
+        "narHash": "sha256-UPi8VTO/3Pt9PxlND1tDqNLe0qpHL/jUIIFtlTnW0Wo=",
+        "ref": "refs/heads/main",
+        "rev": "a4f4c6699d90c69ec266fad3051f843a89fd4e0d",
+        "revCount": 11,
+        "type": "git",
+        "url": "ssh://git@github.com/averyanalex/matetech-engine.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "ssh://git@github.com/averyanalex/matetech-engine.git"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1682268651,
@@ -71,6 +102,8 @@
     "root": {
       "inputs": {
         "flake-utils": "flake-utils",
+        "import-cargo": "import-cargo",
+        "matetech-engine": "matetech-engine",
         "nixpkgs": "nixpkgs",
         "rust-overlay": "rust-overlay"
       }

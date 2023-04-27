@@ -2,13 +2,21 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
+    import-cargo.url = "github:edolstra/import-cargo";
     flake-utils.url = "github:numtide/flake-utils";
+    matetech-engine = {
+      url = "git+ssh://git@github.com/averyanalex/matetech-engine.git";
+      flake = false;
+    };
   };
 
   outputs = {
+    self,
     nixpkgs,
     rust-overlay,
     flake-utils,
+    import-cargo,
+    matetech-engine,
     ...
   }:
     flake-utils.lib.eachDefaultSystem (
@@ -16,6 +24,31 @@
         overlays = [(import rust-overlay)];
         pkgs = import nixpkgs {inherit system overlays;};
         rustVersion = pkgs.rust-bin.nightly.latest.default;
+        inherit (import-cargo.builders) importCargo;
+
+        cpmbot = pkgs.stdenv.mkDerivation {
+          name = "cpmbot";
+          src = self;
+
+          buildInputs = with pkgs; [
+            openssl
+          ];
+
+          nativeBuildInputs = [
+            (importCargo { lockFile = ./Cargo.lock; inherit pkgs; }).cargoHome
+            rustVersion
+            pkgs.pkg-config
+          ];
+
+          buildPhase = ''
+            ln -sf ${matetech-engine} matetech-engine
+            cargo build --release --offline
+          '';
+
+          installPhase = ''
+            install -Dm775 ./target/release/cpm_bot $out/bin/cpmbot
+          '';
+        };
 
         pgstart = pkgs.writeShellScriptBin "pgstart" ''
           if [ ! -d $PGHOST ]; then
@@ -36,6 +69,7 @@
           pg_ctl -D $PGDATA stop | true
         '';
       in {
+        packages.default = cpmbot;
         devShells = {
           default = pkgs.mkShell {
             buildInputs = with pkgs;
@@ -52,6 +86,7 @@
               ];
 
             shellHook = ''
+              ln -sf ${matetech-engine} matetech-engine
               export PGDATA=$PWD/postgres/data
               export PGHOST=$PWD/postgres
               export LOG_PATH=$PWD/postgres/LOG
@@ -74,6 +109,7 @@
               ];
 
             shellHook = ''
+              ln -sf ${matetech-engine} matetech-engine
               export PGDATA=$PWD/postgres/data
               export PGHOST=$PWD/postgres
               export LOG_PATH=$PWD/postgres/LOG
