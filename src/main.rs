@@ -124,9 +124,9 @@ async fn answer(
 
             let solver = matetech_engine::Solver::new(token, test_id)?;
             match solver.solve().await {
-                Ok((answers_str, answers_map)) => {
-                    for (q_id, ans) in answers_map {
-                        db::save_answer(&db, q_id.into(), &ans).await?;
+                Ok((answers_str, answers_set)) => {
+                    for ans in answers_set {
+                        db::save_answer(&db, &ans).await?;
                     }
 
                     bot.edit_message_text(

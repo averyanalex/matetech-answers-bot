@@ -1,5 +1,21 @@
 {
   "db": "PostgreSQL",
+  "082d9a927499c81fd28a34488d02089e015a01905314eb58dd52640ae6b43d6c": {
+    "describe": {
+      "columns": [],
+      "nullable": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Text",
+          "Text",
+          "Text",
+          "Text"
+        ]
+      }
+    },
+    "query": "\nINSERT INTO answers ( id, question, human, exact, machine )\n    VALUES ( $1, $2, $3, $4, $5 )\n    ON CONFLICT ( id ) DO UPDATE\n        SET ( question, human, exact, machine ) = ( $2, $3, $4, $5 )\n        "
+  },
   "2d59192953f35422fc5c626b447ead43dc5d5fc63dfd43d2709c94ffb31238f2": {
     "describe": {
       "columns": [
@@ -32,18 +48,5 @@
       }
     },
     "query": "\nINSERT INTO tokens ( chat_id, token )\n    VALUES ( $1, $2 )\n    ON CONFLICT ( chat_id ) DO UPDATE\n        SET token = $2\n        "
-  },
-  "ef78bea5f3f63dc2d74b646ac4f4b469ce461cf22e8efeded5e7218320b5c28b": {
-    "describe": {
-      "columns": [],
-      "nullable": [],
-      "parameters": {
-        "Left": [
-          "Int8",
-          "Text"
-        ]
-      }
-    },
-    "query": "\nINSERT INTO answers ( question_id, answer )\n    VALUES ( $1, $2 )\n    ON CONFLICT ( question_id ) DO UPDATE\n        SET answer = $2\n        "
   }
 }

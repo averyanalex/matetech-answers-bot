@@ -22,18 +22,20 @@ INSERT INTO tokens ( chat_id, token )
 
 pub async fn save_answer(
     db: &PgPool,
-    question_id: i64,
-    answer: &String,
+    ans: &matetech_engine::GeneratedAnswer,
 ) -> anyhow::Result<()> {
     sqlx::query!(
         r#"
-INSERT INTO answers ( question_id, answer )
-    VALUES ( $1, $2 )
-    ON CONFLICT ( question_id ) DO UPDATE
-        SET answer = $2
+INSERT INTO answers ( id, question, human, exact, machine )
+    VALUES ( $1, $2, $3, $4, $5 )
+    ON CONFLICT ( id ) DO UPDATE
+        SET ( question, human, exact, machine ) = ( $2, $3, $4, $5 )
         "#,
-        question_id,
-        answer,
+        ans.question_id as i32,
+        ans.question,
+        ans.human,
+        ans.exact,
+        ans.machine,
     )
     .execute(db)
     .await?;
