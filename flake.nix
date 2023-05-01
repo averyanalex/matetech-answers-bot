@@ -5,7 +5,7 @@
     import-cargo.url = "github:edolstra/import-cargo";
     flake-utils.url = "github:numtide/flake-utils";
     matetech-engine = {
-      url = "git+ssh://git@github.com/averyanalex/matetech-engine.git";
+      url = "git+ssh://git@github.com/cpmbot/engine.git";
       flake = false;
     };
   };
