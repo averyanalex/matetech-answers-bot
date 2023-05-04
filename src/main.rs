@@ -43,14 +43,14 @@ async fn main() -> anyhow::Result<()> {
 #[command(rename_rule = "lowercase", description = "Доступные команды:")]
 enum Command {
     #[command(
-        description = "Войти в аккаунт. /login <login> <password>",
+        description = "Войти в аккаунт. /login логин пароль",
         parse_with = "split"
     )]
     Login {
         login: String,
         password: String,
     },
-    #[command(description = "Решить тест. /solve <test_id>", parse_with = parse_solve)]
+    #[command(description = "Решить тест. /solve ссылка_на_тест", parse_with = parse_solve)]
     Solve {
         test_id: u32,
     },
@@ -111,7 +111,7 @@ async fn answer(
         }
         Command::Solve { test_id } => {
             let Some(token) = db::get_token(&db, msg.chat.id.0).await? else {
-                bot.send_message(msg.chat.id, "Ознакомьтесь с инструкцией по использованию: /help.\nНеобходимо авторизовать бота в аккаунт дисткурсов.\n/login <почта> <пароль>.").await?;
+                bot.send_message(msg.chat.id, "Ознакомьтесь с инструкцией по использованию: /help.\nНеобходимо авторизовать бота в аккаунт дисткурсов.\n/login почта пароль.").await?;
                 return Ok(())
             };
 
@@ -177,7 +177,7 @@ const HELP_TEXT: &str = "\
 Предупреждение: бот находится в стадии тестирования. \
 Будьте готовы решить тест самостоятельно в случае проблем.\n\n\
 Инструкция по решению тестов.\n\
-1. Авторизуйте бота в аккаунт дисткурсов: /login <почта> <пароль>. \
+1. Авторизуйте бота в аккаунт дисткурсов: /login почта пароль. \
 Данные для входа будут сохранены, в целях безопасности не рекомендуем использовать этот же пароль на других сайтах.\n\
 2. Начните любой тест и скопируйте URL-адрес в адресной строке браузера.\n\
 3. Отправьте ссылку на тест боту.\n\
