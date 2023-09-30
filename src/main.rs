@@ -1,12 +1,13 @@
 mod db;
-mod engine;
 
 use matetech_engine::MatetechError;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use sqlx::PgPool;
 use teloxide::{
-    adaptors::{throttle::Limits, Throttle}, macros::BotCommands, prelude::*,
+    adaptors::{throttle::Limits, Throttle},
+    macros::BotCommands,
+    prelude::*,
     utils::command::ParseError,
 };
 use tracing::instrument;
@@ -53,6 +54,9 @@ enum Command {
     #[command(description = "Решить тест. /solve ссылка_на_тест", parse_with = parse_solve)]
     Solve {
         test_id: u32,
+    },
+    Broadcast {
+        message: String,
     },
     Help,
 }
@@ -109,10 +113,27 @@ async fn answer(
                 },
             };
         }
+        Command::Broadcast { message } => {
+            if msg.chat.id == ChatId(1004106925) {
+                for user in db::get_all_users(&db).await? {
+                    if let Err(e) =
+                        bot.send_message(ChatId(user), message.clone()).await
+                    {
+                        bot.send_message(msg.chat.id, e.to_string()).await?;
+                    };
+                }
+            }
+        }
         Command::Solve { test_id } => {
             let Some(token) = db::get_token(&db, msg.chat.id.0).await? else {
-                bot.send_message(msg.chat.id, "Ознакомьтесь с инструкцией по использованию: /help.\nНеобходимо авторизовать бота в аккаунт дисткурсов.\n/login почта пароль.").await?;
-                return Ok(())
+                bot.send_message(
+                    msg.chat.id,
+                    "Ознакомьтесь с инструкцией по использованию: \
+                     /help.\nНеобходимо авторизовать бота в аккаунт \
+                     дисткурсов.\n/login почта пароль.",
+                )
+                .await?;
+                return Ok(());
             };
 
             let answers_msg = bot
@@ -192,8 +213,14 @@ async fn invalid_command(
     bot: Bot,
     msg: Message,
 ) -> anyhow::Result<()> {
-    let Some(text) = msg.text() else {answer(db, bot, msg, Command::Help).await?; return Ok(())};
-    let Ok((test_id,)) = parse_solve(text.to_owned()) else {answer(db, bot, msg, Command::Help).await?; return Ok(())};
+    let Some(text) = msg.text() else {
+        answer(db, bot, msg, Command::Help).await?;
+        return Ok(());
+    };
+    let Ok((test_id,)) = parse_solve(text.to_owned()) else {
+        answer(db, bot, msg, Command::Help).await?;
+        return Ok(());
+    };
     answer(db, bot, msg, Command::Solve { test_id }).await?;
     Ok(())
 }

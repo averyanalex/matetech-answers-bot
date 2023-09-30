@@ -58,3 +58,9 @@ WHERE chat_id = $1
     .await?;
     Ok(token.map(|r| r.token))
 }
+
+pub async fn get_all_users(db: &PgPool) -> anyhow::Result<Vec<i64>> {
+    let users =
+        sqlx::query!("SELECT chat_id FROM tokens",).fetch_all(db).await?;
+    Ok(users.iter().map(|r| r.chat_id).collect())
+}
