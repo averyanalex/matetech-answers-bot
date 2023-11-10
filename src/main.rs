@@ -51,6 +51,9 @@ enum Command {
         login: String,
         password: String,
     },
+    Speedrun {
+        test_id: u32,
+    },
     #[command(description = "Решить тест. /solve ссылка_на_тест", parse_with = parse_solve)]
     Solve {
         test_id: u32,
@@ -124,7 +127,7 @@ async fn answer(
                 }
             }
         }
-        Command::Solve { test_id } => {
+        Command::Solve { test_id } | Command::Speedrun { test_id } => {
             let Some(token) = db::get_token(&db, msg.chat.id.0).await? else {
                 bot.send_message(
                     msg.chat.id,
@@ -136,15 +139,21 @@ async fn answer(
                 return Ok(());
             };
 
+            let speedrun = matches!(cmd, Command::Speedrun { .. });
+
             let answers_msg = bot
                 .send_message(
                     msg.chat.id,
-                    "Решаем тест, это может занять до минуты...",
+                    if speedrun {
+                        "ААА СПИДРАН ПО МАЙНКРАФТУ ПОЕХАЛИИИ"
+                    } else {
+                        "Решаем тест, это может занять до минуты..."
+                    },
                 )
                 .await?;
 
             let solver = matetech_engine::Solver::new(token, test_id)?;
-            match solver.solve().await {
+            match solver.solve(speedrun).await {
                 Ok((answers_str, answers_set)) => {
                     for ans in answers_set {
                         db::save_answer(&db, &ans).await?;
@@ -180,7 +189,13 @@ async fn answer(
                         .await?;
                     }
                     _ => {
-                        bot.edit_message_text(msg.chat.id, answers_msg.id, "Произошла неизвестная ошибка. Обратитесь о случившемся сюда (не забудьте указать Telegram): https://forms.yandex.ru/u/61c3234128fb394a19c41d08/").await?;
+                        bot.edit_message_text(
+                            msg.chat.id,
+                            answers_msg.id,
+                            "Произошла неизвестная ошибка. Обратитесь о \
+                             случившемся к @averyanalex",
+                        )
+                        .await?;
                         return Err(err.into());
                     }
                 },
@@ -194,19 +209,17 @@ async fn answer(
     Ok(())
 }
 
-const HELP_TEXT: &str = "\
-Предупреждение: бот находится в стадии тестирования. \
-Будьте готовы решить тест самостоятельно в случае проблем.\n\n\
-Инструкция по решению тестов.\n\
-1. Авторизуйте бота в аккаунт дисткурсов: /login почта пароль. \
-Данные для входа будут сохранены, в целях безопасности не рекомендуем использовать этот же пароль на других сайтах.\n\
-2. Начните любой тест и скопируйте URL-адрес в адресной строке браузера.\n\
-3. Отправьте ссылку на тест боту.\n\
-4. Подождите, пока бот выполнит тест.\n\
-5. Бот автоматически занесёт ответы в тест.\n\
-6. Убедитесь в правильности ответов и завершите тест.\n\n\
-В случае возникновения ошибок обращайтесь сюда (с указанием вашего Telegram): \
-https://forms.yandex.ru/u/61c3234128fb394a19c41d08/";
+const HELP_TEXT: &str =
+    "\
+Предупреждение: бот находится в стадии тестирования. Будьте готовы решить тест \
+     самостоятельно в случае проблем.\n\nИнструкция по решению тестов.\n1. \
+     Авторизуйте бота в аккаунт дисткурсов: /login почта пароль. Данные для \
+     входа будут сохранены, в целях безопасности не рекомендуем использовать \
+     этот же пароль на других сайтах.\n2. Начните любой тест и скопируйте \
+     URL-адрес в адресной строке браузера.\n3. Отправьте ссылку на тест \
+     боту.\n4. Подождите, пока бот выполнит тест.\n5. Бот автоматически \
+     занесёт ответы в тест.\n6. Убедитесь в правильности ответов и завершите \
+     тест.\n\nВ случае возникновения ошибок обращайтесь к @averyanalex";
 
 async fn invalid_command(
     db: PgPool,
