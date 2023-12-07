@@ -48,7 +48,7 @@ async fn main() -> anyhow::Result<()> {
                 sentry::ClientOptions {
                     release: sentry::release_name!(),
                     attach_stacktrace: true,
-                    traces_sample_rate: 0.1,
+                    traces_sample_rate: 1.0,
                     ..Default::default()
                 },
             ));
