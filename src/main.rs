@@ -35,7 +35,6 @@ async fn main() -> anyhow::Result<()> {
         .with(
             sentry_tracing::layer().event_filter(|md| match *md.level() {
                 Level::TRACE => EventFilter::Ignore,
-                Level::ERROR => EventFilter::Event,
                 _ => EventFilter::Breadcrumb,
             }),
         )
@@ -278,8 +277,6 @@ const HELP_TEXT: &str = "\
 
 #[instrument(skip(db, bot))]
 async fn invalid_command(db: PgPool, bot: Bot, msg: Message) -> anyhow::Result<()> {
-    configure_scope(&msg);
-
     let Some(text) = msg.text() else {
         answer(db, bot, msg, Command::Help).await?;
         return Ok(());
