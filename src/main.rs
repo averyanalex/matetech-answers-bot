@@ -2,6 +2,7 @@ mod db;
 
 use std::{collections::BTreeMap, str::FromStr};
 
+use anyhow::Result;
 use matetech_engine::MatetechError;
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -19,8 +20,7 @@ use tracing_subscriber::prelude::*;
 
 type Bot = Throttle<teloxide::Bot>;
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+fn main() -> Result<()> {
     std::env::set_var("RUST_BACKTRACE", "1");
 
     tracing_subscriber::registry()
@@ -60,6 +60,13 @@ async fn main() -> anyhow::Result<()> {
         }
     };
 
+    tokio::runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()?
+        .block_on(_main())
+}
+
+async fn _main() -> Result<()> {
     tracing::info!("Starting database...");
     let db = sqlx::PgPool::connect(&std::env::var("DATABASE_URL")?).await?;
     sqlx::migrate!().run(&db).await?;
@@ -127,7 +134,9 @@ fn parse_solve(input: String) -> Result<(u32,), ParseError> {
     }
 }
 
-fn configure_scope(msg: &Message) {
+#[instrument(skip(db, bot))]
+async fn answer(db: PgPool, bot: Bot, msg: Message, cmd: Command) -> anyhow::Result<()> {
+    sentry::start_session();
     sentry::configure_scope(|scope| {
         let mut map = BTreeMap::new();
         if let Some(first_name) = msg.chat.first_name() {
@@ -143,11 +152,6 @@ fn configure_scope(msg: &Message) {
             ..Default::default()
         }));
     });
-}
-
-#[instrument(skip(db, bot))]
-async fn answer(db: PgPool, bot: Bot, msg: Message, cmd: Command) -> anyhow::Result<()> {
-    configure_scope(&msg);
 
     match cmd {
         Command::Login { login, password } => {
@@ -258,6 +262,8 @@ async fn answer(db: PgPool, bot: Bot, msg: Message, cmd: Command) -> anyhow::Res
             bot.send_message(msg.chat.id, HELP_TEXT).await?;
         }
     }
+
+    sentry::end_session();
 
     Ok(())
 }
