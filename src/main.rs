@@ -1,8 +1,12 @@
 mod db;
 
+use std::str::FromStr;
+
 use matetech_engine::MatetechError;
 use once_cell::sync::Lazy;
 use regex::Regex;
+use sentry::capture_error;
+use sentry_tracing::EventFilter;
 use sqlx::PgPool;
 use teloxide::{
     adaptors::{throttle::Limits, Throttle},
@@ -10,13 +14,51 @@ use teloxide::{
     prelude::*,
     utils::command::ParseError,
 };
-use tracing::instrument;
+use tracing::*;
+use tracing_subscriber::prelude::*;
 
 type Bot = Throttle<teloxide::Bot>;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    tracing_subscriber::fmt::init();
+    std::env::set_var("RUST_BACKTRACE", "1");
+
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::fmt::layer().with_filter(
+                tracing_subscriber::filter::LevelFilter::from_str(
+                    &std::env::var("RUST_LOG")
+                        .unwrap_or_else(|_| String::from("info")),
+                )
+                .unwrap_or(tracing_subscriber::filter::LevelFilter::INFO),
+            ),
+        )
+        .with(sentry_tracing::layer().event_filter(|md| match *md.level() {
+            Level::TRACE => EventFilter::Ignore,
+            Level::ERROR => EventFilter::Event,
+            _ => EventFilter::Breadcrumb,
+        }))
+        .try_init()
+        .unwrap();
+
+    let _sentry_guard = match std::env::var("SENTRY_DSN") {
+        Ok(d) => {
+            let guard = sentry::init((
+                d,
+                sentry::ClientOptions {
+                    release: sentry::release_name!(),
+                    attach_stacktrace: true,
+                    traces_sample_rate: 0.1,
+                    ..Default::default()
+                },
+            ));
+            Some(guard)
+        }
+        Err(e) => {
+            warn!("can't get SENTRY_DSN: {:?}", e);
+            None
+        }
+    };
 
     tracing::info!("Starting database...");
     let db = sqlx::PgPool::connect(&std::env::var("DATABASE_URL")?).await?;
@@ -196,6 +238,7 @@ async fn answer(
                              случившемся к @averyanalex",
                         )
                         .await?;
+                        capture_error(&err);
                         return Err(err.into());
                     }
                 },
@@ -209,8 +252,7 @@ async fn answer(
     Ok(())
 }
 
-const HELP_TEXT: &str =
-    "\
+const HELP_TEXT: &str = "\
 Предупреждение: бот находится в стадии тестирования. Будьте готовы решить тест \
      самостоятельно в случае проблем.\n\nИнструкция по решению тестов.\n1. \
      Авторизуйте бота в аккаунт дисткурсов: /login почта пароль. Данные для \

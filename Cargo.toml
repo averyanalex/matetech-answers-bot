@@ -7,9 +7,9 @@ edition = "2021"
 anyhow = "1.0"
 sqlx = { version = "0.7", features = ["postgres", "runtime-tokio", "migrate"] }
 teloxide = { version = "0.12.2", default-features = false, features = [
+    "ctrlc_handler",
     "macros",
     "throttle",
-    "ctrlc_handler"
 ] }
 tokio = { version = "1.34", features = ["rt-multi-thread", "macros"] }
 tracing = "0.1.40"
@@ -18,6 +18,15 @@ matetech-engine = { path = "./matetech-engine" }
 regex = "1.10"
 once_cell = "1.18"
 thiserror = "1.0"
+sentry = { version = "0.32", default-features = false, features = [
+    "anyhow",
+    "backtrace",
+    "contexts",
+    "debug-images",
+    "panic",
+    "rustls",
+] }
+sentry-tracing = "0.32.0"
 
 [profile.release]
 debug = 1
