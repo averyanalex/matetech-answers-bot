@@ -1658,6 +1658,7 @@ version = "0.32.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b596ee5f4e76638de6063ca96fd3d923675416461fc7f1b77406dc2f32d1979"
 dependencies = [
+ "httpdate",
  "reqwest",
  "rustls",
  "sentry-anyhow",
@@ -1667,6 +1668,7 @@ dependencies = [
  "sentry-debug-images",
  "sentry-panic",
  "sentry-tracing",
+ "tokio",
  "ureq",
  "webpki-roots",
 ]

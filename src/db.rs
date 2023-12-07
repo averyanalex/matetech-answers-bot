@@ -1,10 +1,6 @@
 use sqlx::PgPool;
 
-pub async fn set_token(
-    db: &PgPool,
-    chat_id: i64,
-    token: &str,
-) -> anyhow::Result<()> {
+pub async fn set_token(db: &PgPool, chat_id: i64, token: &str) -> anyhow::Result<()> {
     sqlx::query!(
         r#"
 INSERT INTO tokens ( chat_id, token )
@@ -42,10 +38,7 @@ INSERT INTO answers ( id, question, human, exact, machine )
     Ok(())
 }
 
-pub async fn get_token(
-    db: &PgPool,
-    chat_id: i64,
-) -> anyhow::Result<Option<String>> {
+pub async fn get_token(db: &PgPool, chat_id: i64) -> anyhow::Result<Option<String>> {
     let token = sqlx::query!(
         r#"
 SELECT token
@@ -60,7 +53,8 @@ WHERE chat_id = $1
 }
 
 pub async fn get_all_users(db: &PgPool) -> anyhow::Result<Vec<i64>> {
-    let users =
-        sqlx::query!("SELECT chat_id FROM tokens",).fetch_all(db).await?;
+    let users = sqlx::query!("SELECT chat_id FROM tokens",)
+        .fetch_all(db)
+        .await?;
     Ok(users.iter().map(|r| r.chat_id).collect())
 }

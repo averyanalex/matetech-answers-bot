@@ -24,6 +24,7 @@ sentry = { version = "0.32", default-features = false, features = [
     "contexts",
     "debug-images",
     "panic",
+    "reqwest",
     "rustls",
 ] }
 sentry-tracing = "0.32.0"
