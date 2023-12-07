@@ -46,6 +46,8 @@
           name = "cpmbot";
           src = self;
 
+          dontStrip = true; # for sentry
+
           inherit buildInputs;
 
           nativeBuildInputs =

@@ -30,5 +30,5 @@ sentry = { version = "0.32", default-features = false, features = [
 sentry-tracing = "0.32.0"
 
 [profile.release]
-debug = 1
+debug = 1 # for sentry
 overflow-checks = true
