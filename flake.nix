@@ -23,22 +23,41 @@
       system: let
         overlays = [(import rust-overlay)];
         pkgs = import nixpkgs {inherit system overlays;};
-        rustVersion = pkgs.rust-bin.nightly.latest.default;
         inherit (import-cargo.builders) importCargo;
+
+        rustDev = pkgs.rust-bin.stable.latest.default;
+        rustBuild = pkgs.rust-bin.stable.latest.minimal;
+
+        devInputs =
+          [rustDev]
+          ++ (with pkgs; [
+            alejandra
+            sqlx-cli
+            postgresql
+          ])
+          ++ [
+            pgstart
+            pgstop
+          ];
+        buildInputs = [];
+        nativeBuildInputs = [];
 
         cpmbot = pkgs.stdenv.mkDerivation {
           name = "cpmbot";
           src = self;
 
-          buildInputs = with pkgs; [
-            openssl
-          ];
+          inherit buildInputs;
 
-          nativeBuildInputs = [
-            (importCargo { lockFile = ./Cargo.lock; inherit pkgs; }).cargoHome
-            rustVersion
-            pkgs.pkg-config
-          ];
+          nativeBuildInputs =
+            nativeBuildInputs
+            ++ [
+              (importCargo {
+                lockFile = ./Cargo.lock;
+                inherit pkgs;
+              })
+              .cargoHome
+            ]
+            ++ [rustBuild];
 
           buildPhase = ''
             ln -sf ${matetech-engine} matetech-engine
@@ -46,7 +65,7 @@
           '';
 
           installPhase = ''
-            install -Dm775 ./target/release/cpm_bot $out/bin/cpmbot
+            install -Dm775 ./target/release/cpmbot $out/bin/cpmbot
           '';
         };
 
@@ -72,41 +91,7 @@
         packages.default = cpmbot;
         devShells = {
           default = pkgs.mkShell {
-            buildInputs = with pkgs;
-              [
-                sqlx-cli
-                postgresql
-                openssl
-                pkg-config
-              ]
-              ++ [
-                pgstart
-                pgstop
-                rustVersion
-              ];
-
-            shellHook = ''
-              ln -sf ${matetech-engine} matetech-engine
-              export PGDATA=$PWD/postgres/data
-              export PGHOST=$PWD/postgres
-              export LOG_PATH=$PWD/postgres/LOG
-              export PGDATABASE=cpmbot
-              export DATABASE_URL=postgresql:///cpmbot?host=$PWD/postgres;
-            '';
-          };
-          norust = pkgs.mkShell {
-            buildInputs = with pkgs;
-              [
-                sqlx-cli
-                postgresql
-                openssl
-                pkg-config
-              ]
-              ++ [
-                pgstart
-                pgstop
-                # rustVersion
-              ];
+            buildInputs = devInputs ++ buildInputs ++ nativeBuildInputs;
 
             shellHook = ''
               ln -sf ${matetech-engine} matetech-engine
