@@ -208,7 +208,7 @@ async fn answer(db: PgPool, bot: Bot, msg: Message, cmd: Command) -> anyhow::Res
                 )
                 .await?;
 
-            let solver = matetech_engine::Solver::new(token, test_id)?;
+            let mut solver = matetech_engine::Solver::new(token, test_id)?;
             match solver.solve(speedrun).await {
                 Ok((answers_str, answers_set)) => {
                     for ans in answers_set {

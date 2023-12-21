@@ -54,11 +54,11 @@
     "matetech-engine": {
       "flake": false,
       "locked": {
-        "lastModified": 1701953819,
-        "narHash": "sha256-m+xr/pC/rUW+YrUEDYo/IuFPCxnOzX9FbzWSEB8DFk0=",
+        "lastModified": 1703165438,
+        "narHash": "sha256-NwuVGY8UhIf0xtBiqryWZbSle2NPb3jVPG4hAMX0Z40=",
         "ref": "refs/heads/main",
-        "rev": "682b7a3b045a6476772b95c6ba210f761530c653",
-        "revCount": 34,
+        "rev": "6b7b2acadd3fe95b89541d49bc50514dc6713496",
+        "revCount": 35,
         "type": "git",
         "url": "ssh://git@github.com/cpmbot/engine.git"
       },
