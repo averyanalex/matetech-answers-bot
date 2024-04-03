@@ -18,7 +18,7 @@ INSERT INTO tokens ( chat_id, token )
 
 pub async fn save_answer(
     db: &PgPool,
-    ans: &matetech_engine::GeneratedAnswer,
+    ans: &crate::engine::GeneratedAnswer,
 ) -> anyhow::Result<()> {
     sqlx::query!(
         r#"

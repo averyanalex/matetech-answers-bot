@@ -1,9 +1,7 @@
-mod db;
-
 use std::{collections::BTreeMap, str::FromStr};
 
 use anyhow::Result;
-use matetech_engine::MatetechError;
+use engine::MatetechError;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use sentry::{capture_error, protocol::Value};
@@ -17,6 +15,9 @@ use teloxide::{
 };
 use tracing::*;
 use tracing_subscriber::prelude::*;
+
+mod db;
+mod engine;
 
 type Bot = Throttle<teloxide::Bot>;
 
@@ -155,7 +156,7 @@ async fn answer(db: PgPool, bot: Bot, msg: Message, cmd: Command) -> anyhow::Res
 
     match cmd {
         Command::Login { login, password } => {
-            match matetech_engine::login(&login, &password).await {
+            match engine::login(&login, &password).await {
                 Ok(token) => {
                     db::set_token(&db, msg.chat.id.0, &token).await?;
                     bot.send_message(msg.chat.id, format!("Вы вошли в аккаунт {login}."))
@@ -208,7 +209,7 @@ async fn answer(db: PgPool, bot: Bot, msg: Message, cmd: Command) -> anyhow::Res
                 )
                 .await?;
 
-            let mut solver = matetech_engine::Solver::new(token, test_id)?;
+            let mut solver = engine::Solver::new(token, test_id)?;
             match solver.solve(speedrun).await {
                 Ok((answers_str, answers_set)) => {
                     for ans in answers_set {
@@ -232,7 +233,7 @@ async fn answer(db: PgPool, bot: Bot, msg: Message, cmd: Command) -> anyhow::Res
                             answers_msg.id,
                             "Доступ к тесту невозможен. Убедитесь, что вы \
                              вошли в тот же аккаунт, с которого и запустили \
-                             тест.",
+                             тест и попробуйте перелогиниться (/login почта пароль).",
                         )
                         .await?;
                     }

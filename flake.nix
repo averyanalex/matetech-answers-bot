@@ -4,10 +4,6 @@
     rust-overlay.url = "github:oxalica/rust-overlay";
     import-cargo.url = "github:edolstra/import-cargo";
     flake-utils.url = "github:numtide/flake-utils";
-    matetech-engine = {
-      url = "git+ssh://git@github.com/cpmbot/engine.git";
-      flake = false;
-    };
   };
 
   outputs = {
@@ -16,7 +12,6 @@
     rust-overlay,
     flake-utils,
     import-cargo,
-    matetech-engine,
     ...
   }:
     flake-utils.lib.eachDefaultSystem (
@@ -62,7 +57,6 @@
             ++ [rustBuild];
 
           buildPhase = ''
-            ln -sf ${matetech-engine} matetech-engine
             cargo build --release --offline
           '';
 
@@ -96,7 +90,6 @@
             buildInputs = devInputs ++ buildInputs ++ nativeBuildInputs;
 
             shellHook = ''
-              ln -sf ${matetech-engine} matetech-engine
               export PGDATA=$PWD/postgres/data
               export PGHOST=$PWD/postgres
               export LOG_PATH=$PWD/postgres/LOG
